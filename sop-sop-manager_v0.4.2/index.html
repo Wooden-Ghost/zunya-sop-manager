@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CRM 客户联系人收集 SOP 流程管理器</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-mode="viewer">
+  <header class="topbar">
+    <div class="topbar-main">
+      <div class="title-area">
+        <h1 id="appTitle">CRM 客户联系人收集 SOP 流程管理器</h1>
+        <p id="appSubtitle">本地静态版 · 默认观看模式</p>
+      </div>
+      <div class="mode-area">
+        <button class="btn mode-toggle" id="modeToggle" type="button">开发模式</button>
+      </div>
+    </div>
+    <div class="dev-toolbar" id="devToolbar" hidden>
+      <button class="btn" id="saveLocalBtn" type="button">保存到本机</button>
+      <button class="btn" id="exportJsonBtn" type="button">导出 JSON</button>
+      <label class="btn file-btn" for="importJsonInput">导入 JSON</label>
+      <input id="importJsonInput" type="file" accept="application/json" hidden>
+      <button class="btn" id="exportViewerHtmlBtn" type="button">导出新人观看版 HTML</button>
+      <button class="btn" id="exportManagerHtmlBtn" type="button">导出维护版 HTML</button>
+      <button class="btn danger" id="clearLocalBtn" type="button">清空本机记录</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="flow-nav" id="flowNav" aria-label="流程树"></nav>
+    </aside>
+    <main class="main" id="app" tabindex="-1"></main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" type="button">关闭</button>
+    <img id="lightboxImage" alt="">
+    <p id="lightboxCaption"></p>
+  </div>
+  <script id="initial-data" type="application/json">
+
+
+{
+  "schemaVersion": 1,
+  "meta": {
+    "title": "CRM 客户联系人收集 SOP 流程管理器",
+    "description": "本地静态版 SOP 流程管理器。v0.4 改为分页演示、目录只导航步骤、开发模式图片优先维护，观看模式以图片为主。",
+    "version": "0.4.2",
+    "createdAt": "2026-06-09",
+    "updatedAt": "2026-06-09",
+    "source": "CRM客户联系人收集SOP_完整备份_20260601_1507.html"
+  },
+  "flows": [
+    {
+      "id": "flow_crm_contact_collection",
+      "title": "CRM 客户联系人收集与导入 SOP",
+      "description": "正常情况下，新人按这条主线完成客户筛选、联系人查找、清洗、上传、SN 验证和 CRM 回填。",
+      "nodeIds": [
+        "node_crm_filter",
+        "node_customer_edit",
+        "node_rr_sn_search",
+        "node_merge_clean",
+        "node_upload_crm",
+        "node_ai_process",
+        "node_ai_split",
+        "node_sn_upload_verify",
+        "node_crm_backfill"
+      ],
+      "status": "active"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node_crm_filter",
+      "title": "CRM 高级筛选客户",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "从 CRM 客户列表中筛出本轮需要收集联系人的客户。",
+      "input": [
+        "当前数据来源",
+        "CRM 客户列表",
+        "固定行业排除条件",
+        "是否联系人收集排除条件"
+      ],
+      "actions": [
+        "打开 CRM 客户列表中的「高级筛选」。",
+        "「数据来源」填写当前要处理的来源名称。",
+        "行业排除条件与是否联系人收集排除条件保持固定。",
+        "点击查询，筛选后从列表中逐个进入客户编辑页处理。"
+      ],
+      "passCriteria": [
+        "高级筛选弹窗已打开。",
+        "除数据来源外，其他筛选条件未改动。",
+        "数据来源按共享文件夹顺序推进。",
+        "列表只保留当前数据来源下未完成联系人收集的客户。"
+      ],
+      "output": [
+        "待进入编辑页处理的客户列表"
+      ],
+      "referenceTables": [
+        {
+          "title": "固定筛选条件",
+          "columns": [
+            "字段",
+            "条件",
+            "值"
+          ],
+          "rows": [
+            [
+              "行业",
+              "不包含",
+              "博物馆"
+            ],
+            [
+              "行业",
+              "不包含",
+              "出版"
+            ],
+            [
+              "行业",
+              "不包含",
+              "不符"
+            ],
+            [
+              "行业",
+              "不包含",
+              "个人"
+            ],
+            [
+              "是否联系人收集",
+              "不包含",
+              "已做"
+            ],
+            [
+              "是否联系人收集",
+              "不包含",
+              "皆无"
+            ],
+            [
+              "是否联系人收集",
+              "不包含",
+              "邮箱"
+            ]
+          ]
+        }
+      ],
+      "branchIds": [
+        "branch_crm_filter_empty",
+        "branch_filter_condition_lost"
+      ],
+      "exceptionIds": [
+        "exception_industry_excluded"
+      ],
+      "devNotes": "旧版第 1 步迁移。后续可以把固定筛选条件抽成复用规则。",
+      "legacyStep": 1,
+      "navTitle": "CRM筛选客户",
+      "viewerTitle": "CRM 高级筛选客户",
+      "viewerSummary": {
+        "oneLineGoal": "从 CRM 客户列表中筛出本轮需要收集联系人的客户。",
+        "keyPoints": [
+          "只改「数据来源」。",
+          "行业和联系人收集排除条件保持不动。",
+          "按共享文件夹的数据来源顺序推进。"
+        ],
+        "doneSignal": "列表只剩当前数据来源下未完成联系人收集的客户。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "CRM筛选客户"
+    },
+    {
+      "id": "node_customer_edit",
+      "title": "客户编辑界面：确认官网、客户名称、行业",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "确认客户主体、官网和行业是否适合进入联系人处理流程。",
+      "input": [
+        "CRM 客户编辑页",
+        "客户名称",
+        "官网",
+        "公司简介",
+        "行业字段"
+      ],
+      "actions": [
+        "检查客户名称是否像真实公司名。",
+        "检查官网是否可访问、是否对应当前客户主体。",
+        "检查公司简介是否足以判断行业。",
+        "官网、名称、行业不确定时，用固定提示词问 AI，不自行改规则。"
+      ],
+      "passCriteria": [
+        "已确认公司主体。",
+        "已确认官网是否可用。",
+        "已确认行业是否进入联系人处理流程。",
+        "不确定内容已提交 AI 判断。"
+      ],
+      "output": [
+        "已确认的公司主体",
+        "可用于 RR / SN 查询的官网或公司名",
+        "行业是否继续处理的判断结果"
+      ],
+      "branchIds": [
+        "branch_website_invalid",
+        "branch_name_abnormal",
+        "branch_industry_excluded",
+        "branch_subject_uncertain"
+      ],
+      "exceptionIds": [
+        "exception_website_invalid",
+        "exception_name_abnormal",
+        "exception_industry_excluded",
+        "exception_subject_uncertain"
+      ],
+      "devNotes": "旧版第 2 步迁移。AI 固定提示词后续可以单独拆成节点或模板。",
+      "legacyStep": 2,
+      "navTitle": "确认客户主体",
+      "viewerTitle": "确认官网、客户名称、行业",
+      "viewerSummary": {
+        "oneLineGoal": "确认客户主体、官网和行业是否适合进入联系人处理流程。",
+        "keyPoints": [
+          "先看官网是否对应当前客户主体。",
+          "名称、官网、行业不确定时，用固定提示词问 AI。",
+          "行业不符时不要继续联系人查找。"
+        ],
+        "doneSignal": "已确认可用于 RR / SN 查询的官网或公司名，并明确是否继续处理。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "确认客户主体"
+    },
+    {
+      "id": "node_rr_sn_search",
+      "title": "用官网到 RR / SN 查找对应公司并筛选联系人",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "在 RocketReach 和 Snov.io 中找到当前公司主体，并筛选可用于后续处理的联系人。",
+      "input": [
+        "已确认官网",
+        "AI 确认后的公司名、品牌名或母公司名",
+        "RR / SN 查询入口"
+      ],
+      "actions": [
+        "优先复制公司官网到 RR 和 SN 查询。",
+        "找到对应公司主体，不要混入同名公司或错主体。",
+        "筛选符合岗位方向的联系人。",
+        "获取邮箱、LinkedIn、姓名、职位、公司等信息。"
+      ],
+      "passCriteria": [
+        "RR 已搜索并确认结果。",
+        "SN 已搜索并确认结果。",
+        "联系人属于当前公司主体。",
+        "联系人信息已准备导出或合并。"
+      ],
+      "output": [
+        "RR 导出文件",
+        "SN 导出文件",
+        "联系人有效性初步判断"
+      ],
+      "branchIds": [
+        "branch_rr_sn_no_company",
+        "branch_rr_sn_no_contacts",
+        "branch_subject_uncertain_from_search"
+      ],
+      "exceptionIds": [
+        "exception_rr_sn_no_company",
+        "exception_no_contacts",
+        "exception_subject_uncertain"
+      ],
+      "devNotes": "旧版第 3 步迁移。官网优先级高于公司名，主体不确定时必须回到 AI 判断。",
+      "legacyStep": 3,
+      "navTitle": "RR/SN查联系人",
+      "viewerTitle": "RR / SN 查找联系人",
+      "viewerSummary": {
+        "oneLineGoal": "用官网或公司名在 RR / SN 找到对应公司，并筛出可处理联系人。",
+        "keyPoints": [
+          "官网优先于公司名。",
+          "不要混入同名公司或错主体。",
+          "没有结果时按分支规则处理，不要硬凑联系人。"
+        ],
+        "doneSignal": "已得到 RR / SN 导出文件，或明确判定无可用联系人。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "RR/SN查联系人"
+    },
+    {
+      "id": "node_merge_clean",
+      "title": "联系人合并清洗，生成「优先联系人.xlsx」",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "用联系人合并工具合并 RR / SN 联系人文件，并输出清洗后的「优先联系人.xlsx」。",
+      "input": [
+        "RR 导出文件",
+        "SN 导出文件",
+        "联系人合并清洗工具"
+      ],
+      "actions": [
+        "打开联系人合并工具。",
+        "导入 RR / SN 获取到的联系人文件。",
+        "执行合并和清洗。",
+        "生成「优先联系人.xlsx」。"
+      ],
+      "passCriteria": [
+        "工具已打开。",
+        "RR / SN 文件已导入。",
+        "已生成「优先联系人.xlsx」。",
+        "文件能正常打开。"
+      ],
+      "output": [
+        "优先联系人.xlsx"
+      ],
+      "toolPaths": [
+        "C:/Users/pc/Desktop/RR处理工具_v4.4.6_单按钮自动判定CSV或合并.html"
+      ],
+      "branchIds": [
+        "branch_merge_file_open_failed"
+      ],
+      "exceptionIds": [
+        "exception_merge_file_open_failed"
+      ],
+      "devNotes": "旧版第 4 步迁移。RR 通常导出 CSV，SN 通常导出 XLSX。",
+      "legacyStep": 4,
+      "navTitle": "合并清洗联系人",
+      "viewerTitle": "合并清洗，生成优先联系人",
+      "viewerSummary": {
+        "oneLineGoal": "把 RR / SN 导出的联系人文件合并清洗，生成「优先联系人.xlsx」。",
+        "keyPoints": [
+          "RR 通常是 CSV，SN 通常是 XLSX。",
+          "导入对应文件后运行合并清洗。",
+          "生成文件必须能正常打开。"
+        ],
+        "doneSignal": "已生成可打开的「优先联系人.xlsx」。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "合并清洗联系人"
+    },
+    {
+      "id": "node_upload_crm",
+      "title": "上传「优先联系人.xlsx」回 CRM，并回填是否联系人收集",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "将处理好的联系人文件上传到对应客户附件，并按联系人结果回填 CRM 字段。",
+      "input": [
+        "优先联系人.xlsx",
+        "当前 CRM 客户附件区",
+        "联系人有效性判断结果"
+      ],
+      "actions": [
+        "将「优先联系人.xlsx」上传到正确客户附件。",
+        "根据实际联系人结果填写「是否联系人收集」。",
+        "检查附件客户、文件名和字段状态是否一致。",
+        "保存 CRM 客户页面。"
+      ],
+      "passCriteria": [
+        "附件上传到正确客户。",
+        "文件名是「优先联系人.xlsx」或可明确识别。",
+        "CRM「是否联系人收集」已回填。",
+        "没有把其他公司的文件传错。"
+      ],
+      "output": [
+        "CRM 附件已上传",
+        "CRM「是否联系人收集」已回填"
+      ],
+      "referenceTables": [
+        {
+          "title": "状态填写规则",
+          "columns": [
+            "实际情况",
+            "CRM「是否联系人收集」填写"
+          ],
+          "rows": [
+            [
+              "有有效联系人和可用邮箱",
+              "已做"
+            ],
+            [
+              "RR / SN 都没有可用联系人",
+              "皆无"
+            ],
+            [
+              "只有 LinkedIn，没有邮箱",
+              "只有领英无邮箱"
+            ]
+          ]
+        }
+      ],
+      "branchIds": [
+        "branch_only_linkedin",
+        "branch_only_invalid_email",
+        "branch_no_contacts_after_clean",
+        "branch_crm_field_exception"
+      ],
+      "exceptionIds": [
+        "exception_only_linkedin",
+        "exception_only_invalid_email",
+        "exception_no_contacts",
+        "exception_crm_field_exception"
+      ],
+      "devNotes": "旧版第 5 步迁移。字段枚举后续可单独抽到 exceptions 或字典表。",
+      "legacyStep": 5,
+      "navTitle": "上传CRM并回填",
+      "viewerTitle": "上传 CRM 并回填联系人收集状态",
+      "viewerSummary": {
+        "oneLineGoal": "把「优先联系人.xlsx」上传到正确客户附件，并回填联系人收集状态。",
+        "keyPoints": [
+          "确认上传的是当前客户文件。",
+          "按实际结果填写「是否联系人收集」。",
+          "保存前检查附件、文件名和状态是否一致。"
+        ],
+        "doneSignal": "CRM 附件已上传，是否联系人收集字段已保存。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "上传CRM并回填"
+    },
+    {
+      "id": "node_ai_process",
+      "title": "将「优先联系人.xlsx」发送给 AI，生成「处理1」",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "用固定提示词让 AI 判断联系人岗位分类，并生成后续工具需要使用的「处理1」。",
+      "input": [
+        "优先联系人.xlsx",
+        "固定 AI 提示词"
+      ],
+      "actions": [
+        "把「优先联系人.xlsx」发送给 AI。",
+        "使用固定提示词，不要自行改规则。",
+        "获取 AI 输出结果，并命名为「处理1」。"
+      ],
+      "passCriteria": [
+        "文件已发给 AI。",
+        "已使用固定提示词。",
+        "已得到「处理1」。"
+      ],
+      "output": [
+        "处理1"
+      ],
+      "branchIds": [
+        "branch_ai_output_abnormal"
+      ],
+      "exceptionIds": [
+        "exception_ai_output_abnormal"
+      ],
+      "devNotes": "旧版第 6 步迁移。提示词内容暂未内置，后续可作为模板节点管理。",
+      "legacyStep": 6,
+      "navTitle": "AI生成处理1",
+      "viewerTitle": "发给 AI 生成处理1",
+      "viewerSummary": {
+        "oneLineGoal": "用固定提示词让 AI 判断联系人岗位分类，并生成「处理1」。",
+        "keyPoints": [
+          "上传「优先联系人.xlsx」。",
+          "使用固定提示词，不自行改规则。",
+          "检查 AI 输出是否符合「处理1」可用格式。"
+        ],
+        "doneSignal": "已得到可供拆分工具使用的「处理1」。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "AI生成处理1"
+    },
+    {
+      "id": "node_ai_split",
+      "title": "用联系人 AI 分类拆分工具处理「处理1」",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "将 AI 生成的「处理1」放入联系人 AI 分类拆分工具，生成对应公司-岗位文件。",
+      "input": [
+        "处理1",
+        "联系人 AI 分类拆分工具"
+      ],
+      "actions": [
+        "打开联系人 AI 分类拆分工具。",
+        "导入或粘贴「处理1」。",
+        "运行拆分。",
+        "得到公司-岗位文件。"
+      ],
+      "passCriteria": [
+        "工具已打开。",
+        "「处理1」已放入工具。",
+        "已生成公司-岗位文件。",
+        "文件与当前公司对应。"
+      ],
+      "output": [
+        "公司-岗位文件"
+      ],
+      "toolPaths": [
+        "C:/Users/pc/Desktop/联系人AI分类拆分工具_v2.0.0_批量合并版.html"
+      ],
+      "branchIds": [
+        "branch_split_download_blocked",
+        "branch_split_company_mismatch"
+      ],
+      "exceptionIds": [
+        "exception_split_download_blocked",
+        "exception_split_company_mismatch"
+      ],
+      "devNotes": "旧版第 7 步迁移。浏览器提示下载多个文件时需要允许。",
+      "legacyStep": 7,
+      "navTitle": "AI分类拆分",
+      "viewerTitle": "用 AI 分类拆分工具处理",
+      "viewerSummary": {
+        "oneLineGoal": "把「处理1」放入联系人 AI 分类拆分工具，生成公司-岗位文件。",
+        "keyPoints": [
+          "确认当前公司和文件对应。",
+          "运行拆分后检查下载文件。",
+          "浏览器提示下载多个文件时点击允许。"
+        ],
+        "doneSignal": "已得到当前公司的岗位文件。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "AI分类拆分"
+    },
+    {
+      "id": "node_sn_upload_verify",
+      "title": "上传公司-岗位文件到 SN 潜在客户列表",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "将公司-岗位文件上传至 SN 潜在客户列表，验证邮箱地址，并把 Gmail 邮箱转移至对应列表。",
+      "input": [
+        "公司-岗位文件",
+        "SN 潜在客户列表",
+        "岗位列表命名规则"
+      ],
+      "actions": [
+        "进入 SN 潜在客户列表。",
+        "按公司和岗位上传对应文件。",
+        "上传完执行「验证邮箱地址」。",
+        "将 Gmail 邮箱转移至对应列表。"
+      ],
+      "passCriteria": [
+        "公司-岗位文件已上传到 SN。",
+        "已验证邮箱地址。",
+        "Gmail 邮箱已转移到对应列表。",
+        "SN 列表名称和公司 / 岗位对应。"
+      ],
+      "output": [
+        "SN 潜在客户列表已更新",
+        "邮箱已验证",
+        "Gmail 邮箱已转移"
+      ],
+      "branchIds": [
+        "branch_sn_wrong_list",
+        "branch_sn_validation_missing",
+        "branch_gmail_transfer_missing"
+      ],
+      "exceptionIds": [
+        "exception_sn_wrong_list",
+        "exception_sn_validation_missing",
+        "exception_gmail_transfer_missing"
+      ],
+      "devNotes": "旧版第 8 步迁移。上传后验证邮箱和 Gmail 转移不能漏。",
+      "legacyStep": 8,
+      "navTitle": "SN上传验证",
+      "viewerTitle": "上传 SN、验证邮箱、转移 Gmail",
+      "viewerSummary": {
+        "oneLineGoal": "把公司-岗位文件上传到 SN，验证邮箱，并转移 Gmail 邮箱到对应列表。",
+        "keyPoints": [
+          "公司和岗位列表不要传错。",
+          "上传后必须执行「验证邮箱地址」。",
+          "Gmail 邮箱需要转移到对应列表。"
+        ],
+        "doneSignal": "SN 列表已更新，邮箱已验证，Gmail 已转移。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "SN上传验证"
+    },
+    {
+      "id": "node_crm_backfill",
+      "title": "CRM 回填「snvo自动营销状态」并结束当前公司",
+      "type": "normal",
+      "status": "active",
+      "belongsToFlows": [
+        "flow_crm_contact_collection"
+      ],
+      "goal": "SN 相关动作完成后，回到 CRM 将自动营销状态改为已导入，并结束当前客户处理。",
+      "input": [
+        "CRM 当前客户页面",
+        "SN 上传和验证完成结果"
+      ],
+      "actions": [
+        "回到 CRM 当前客户页面。",
+        "找到「snvo自动营销状态」。",
+        "选择「已导入snov」。",
+        "确认保存后，当前客户联系人处理结束。"
+      ],
+      "passCriteria": [
+        "CRM 状态已改为「已导入snov」。",
+        "当前客户所有附件和状态已确认。",
+        "可以开始处理下一个客户。"
+      ],
+      "output": [
+        "当前客户已完成联系人收集与导入流程",
+        "进入下一个客户"
+      ],
+      "branchIds": [
+        "branch_crm_status_missing",
+        "branch_crm_save_failed"
+      ],
+      "exceptionIds": [
+        "exception_crm_field_exception",
+        "exception_crm_save_failed"
+      ],
+      "devNotes": "旧版第 9 步迁移。原文写作 snvo / snov 不完全统一，第一阶段保留原字段表达。",
+      "legacyStep": 9,
+      "navTitle": "CRM回填完成",
+      "viewerTitle": "CRM 回填已导入 snov",
+      "viewerSummary": {
+        "oneLineGoal": "SN 相关动作完成后，回到 CRM 回填自动营销状态并结束当前客户。",
+        "keyPoints": [
+          "回到当前客户页面。",
+          "把「snvo自动营销状态」改为「已导入snov」。",
+          "保存后再处理下一个客户。"
+        ],
+        "doneSignal": "当前客户已完成联系人收集与导入流程。"
+      },
+      "visibleInViewer": true,
+      "shortTitle": "CRM回填完成"
+    }
+  ],
+  "branches": [
+    {
+      "id": "branch_crm_filter_empty",
+      "fromNodeId": "node_crm_filter",
+      "condition": "筛选后列表为空",
+      "action": "检查数据来源是否写错；确认筛选条件是否丢失。",
+      "targetNodeId": "exception_crm_filter_empty",
+      "visibleInViewer": true,
+      "returnNodeId": "node_customer_edit",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_filter_condition_lost",
+      "fromNodeId": "node_crm_filter",
+      "condition": "行业或联系人收集排除条件被改动",
+      "action": "恢复固定筛选条件后重新查询。",
+      "targetNodeId": "exception_filter_condition_lost",
+      "visibleInViewer": true,
+      "returnNodeId": "node_customer_edit",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_website_invalid",
+      "fromNodeId": "node_customer_edit",
+      "condition": "官网打不开 / 官网和客户名称不对应",
+      "action": "问 AI 判断正确主体，不要直接用错误官网继续找联系人。",
+      "targetNodeId": "exception_website_invalid",
+      "visibleInViewer": true,
+      "returnNodeId": "node_rr_sn_search",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_name_abnormal",
+      "fromNodeId": "node_customer_edit",
+      "condition": "客户名称像地址、乱码或联合名称",
+      "action": "问 AI 判断是否适合作为公司名入库，必要时改用正确主体名称搜索。",
+      "targetNodeId": "exception_name_abnormal",
+      "visibleInViewer": true,
+      "returnNodeId": "node_rr_sn_search",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_industry_excluded",
+      "fromNodeId": "node_customer_edit",
+      "condition": "行业为博物馆 / 出版 / 不符 / 个人",
+      "action": "不进入正常联系人处理流程；按当前规则排除或跳过。",
+      "targetNodeId": "exception_industry_excluded",
+      "visibleInViewer": true,
+      "returnNodeId": "node_rr_sn_search",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_subject_uncertain",
+      "fromNodeId": "node_customer_edit",
+      "condition": "公司主体不确定",
+      "action": "先问 AI，再继续 RR / SN，不要凭感觉导入。",
+      "targetNodeId": "exception_subject_uncertain",
+      "visibleInViewer": true,
+      "returnNodeId": "node_rr_sn_search",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_rr_sn_no_company",
+      "fromNodeId": "node_rr_sn_search",
+      "condition": "RR 或 SN 搜不到公司",
+      "action": "优先官网搜索，再用 AI 确认后的公司名、品牌名、母公司名尝试。",
+      "targetNodeId": "exception_rr_sn_no_company",
+      "visibleInViewer": true,
+      "returnNodeId": "node_merge_clean",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_rr_sn_no_contacts",
+      "fromNodeId": "node_rr_sn_search",
+      "condition": "RR / SN 都没有可用联系人",
+      "action": "记录为无可用联系人，CRM「是否联系人收集」填：皆无。",
+      "targetNodeId": "exception_no_contacts",
+      "visibleInViewer": true,
+      "returnNodeId": "node_merge_clean",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_subject_uncertain_from_search",
+      "fromNodeId": "node_rr_sn_search",
+      "condition": "搜索结果主体不确定",
+      "action": "回到 AI 判断主体，不要继续导入。",
+      "targetNodeId": "exception_subject_uncertain",
+      "visibleInViewer": true,
+      "returnNodeId": "node_merge_clean",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_merge_file_open_failed",
+      "fromNodeId": "node_merge_clean",
+      "condition": "生成文件无法打开或内容异常",
+      "action": "重新确认 RR / SN 原始文件格式，重新导入合并工具。",
+      "targetNodeId": "exception_merge_file_open_failed",
+      "visibleInViewer": true,
+      "returnNodeId": "node_upload_crm",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_only_linkedin",
+      "fromNodeId": "node_upload_crm",
+      "condition": "只有 LinkedIn，没有邮箱",
+      "action": "CRM「是否联系人收集」填：只有领英无邮箱。",
+      "targetNodeId": "exception_only_linkedin",
+      "visibleInViewer": true,
+      "returnNodeId": "node_ai_process",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_only_invalid_email",
+      "fromNodeId": "node_upload_crm",
+      "condition": "只有无效邮箱",
+      "action": "不要当作有效联系人导入；标记异常并等待后续规则补充。",
+      "targetNodeId": "exception_only_invalid_email",
+      "visibleInViewer": true,
+      "returnNodeId": "node_ai_process",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_no_contacts_after_clean",
+      "fromNodeId": "node_upload_crm",
+      "condition": "清洗后没有可用联系人",
+      "action": "CRM「是否联系人收集」填：皆无。",
+      "targetNodeId": "exception_no_contacts",
+      "visibleInViewer": true,
+      "returnNodeId": "node_ai_process",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_crm_field_exception",
+      "fromNodeId": "node_upload_crm",
+      "condition": "CRM 字段缺失、枚举异常或无法保存",
+      "action": "先不要乱填，记录字段异常并交给维护者确认。",
+      "targetNodeId": "exception_crm_field_exception",
+      "visibleInViewer": true,
+      "returnNodeId": "node_ai_process",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_ai_output_abnormal",
+      "fromNodeId": "node_ai_process",
+      "condition": "AI 输出不是「处理1」可用格式",
+      "action": "重新使用固定提示词生成，必要时回到优先联系人文件检查源数据。",
+      "targetNodeId": "exception_ai_output_abnormal",
+      "visibleInViewer": true,
+      "returnNodeId": "node_ai_split",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_split_download_blocked",
+      "fromNodeId": "node_ai_split",
+      "condition": "浏览器阻止下载多个文件",
+      "action": "点击允许下载多个文件后重新运行拆分。",
+      "targetNodeId": "exception_split_download_blocked",
+      "visibleInViewer": true,
+      "returnNodeId": "node_sn_upload_verify",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_split_company_mismatch",
+      "fromNodeId": "node_ai_split",
+      "condition": "拆分出的公司-岗位文件与当前公司不对应",
+      "action": "停止上传 SN，回到「处理1」和源文件检查公司主体。",
+      "targetNodeId": "exception_split_company_mismatch",
+      "visibleInViewer": true,
+      "returnNodeId": "node_sn_upload_verify",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_sn_wrong_list",
+      "fromNodeId": "node_sn_upload_verify",
+      "condition": "公司或岗位文件上传到错误 SN 列表",
+      "action": "停止后续动作，移除或纠正错误列表中的记录，再重新上传。",
+      "targetNodeId": "exception_sn_wrong_list",
+      "visibleInViewer": true,
+      "returnNodeId": "node_crm_backfill",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_sn_validation_missing",
+      "fromNodeId": "node_sn_upload_verify",
+      "condition": "上传后未验证邮箱地址",
+      "action": "立即执行「验证邮箱地址」，再继续 Gmail 转移。",
+      "targetNodeId": "exception_sn_validation_missing",
+      "visibleInViewer": true,
+      "returnNodeId": "node_crm_backfill",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_gmail_transfer_missing",
+      "fromNodeId": "node_sn_upload_verify",
+      "condition": "Gmail 邮箱未转移到对应列表",
+      "action": "筛出 Gmail 邮箱并转移到对应列表。",
+      "targetNodeId": "exception_gmail_transfer_missing",
+      "visibleInViewer": true,
+      "returnNodeId": "node_crm_backfill",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_crm_status_missing",
+      "fromNodeId": "node_crm_backfill",
+      "condition": "找不到「snvo自动营销状态」字段",
+      "action": "记录 CRM 字段异常，不要用其他字段代替。",
+      "targetNodeId": "exception_crm_field_exception",
+      "visibleInViewer": true,
+      "returnNodeId": "",
+      "linkEnabled": false
+    },
+    {
+      "id": "branch_crm_save_failed",
+      "fromNodeId": "node_crm_backfill",
+      "condition": "CRM 保存失败",
+      "action": "不要关闭页面，截图记录失败状态后重试或交给维护者。",
+      "targetNodeId": "exception_crm_save_failed",
+      "visibleInViewer": true,
+      "returnNodeId": "",
+      "linkEnabled": false
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "exception_crm_filter_empty",
+      "title": "筛选后列表为空",
+      "condition": "CRM 高级筛选后没有客户",
+      "action": "检查数据来源是否写错；确认固定筛选条件是否丢失；必要时回到共享文件夹确认当前来源。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_filter_condition_lost",
+      "title": "筛选条件丢失",
+      "condition": "行业或是否联系人收集排除条件被改动",
+      "action": "恢复固定筛选条件后重新查询，不能直接在错误条件下继续处理。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_website_invalid",
+      "title": "官网打不开或主体不对应",
+      "condition": "官网打不开 / 官网和客户名称不对应",
+      "action": "问 AI 判断正确主体，不要直接用错误官网继续找联系人。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_name_abnormal",
+      "title": "客户名称异常",
+      "condition": "客户名称像地址、乱码、联合名称",
+      "action": "问 AI 判断是否适合作为公司名入库，必要时改用正确主体名称搜索。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_rr_sn_no_company",
+      "title": "RR / SN 搜不到公司",
+      "condition": "RR 或 SN 搜不到公司",
+      "action": "优先官网搜索，再用 AI 确认后的公司名、品牌名、母公司名尝试。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_only_linkedin",
+      "title": "只有 LinkedIn 没有邮箱",
+      "condition": "有 LinkedIn 但没有可用邮箱",
+      "action": "CRM「是否联系人收集」填：只有领英无邮箱。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_only_invalid_email",
+      "title": "只有无效邮箱",
+      "condition": "只有无效邮箱，没有可用邮箱",
+      "action": "第一阶段先标记异常，不按有效联系人继续导入；后续补充分支规则。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_no_contacts",
+      "title": "没有可用联系人",
+      "condition": "RR / SN 都没有可用联系人",
+      "action": "CRM「是否联系人收集」填：皆无。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_industry_excluded",
+      "title": "行业排除",
+      "condition": "行业为博物馆 / 出版 / 不符 / 个人",
+      "action": "不进入正常联系人处理流程；按当前规则排除或跳过。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_subject_uncertain",
+      "title": "公司主体不确定",
+      "condition": "公司主体不确定",
+      "action": "先问 AI，再继续 RR / SN，不要凭感觉导入。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_merge_file_open_failed",
+      "title": "合并清洗文件异常",
+      "condition": "生成文件无法打开或内容异常",
+      "action": "重新确认 RR / SN 原始文件格式，重新导入合并工具。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_crm_field_exception",
+      "title": "CRM 字段异常",
+      "condition": "CRM 字段缺失、枚举异常或无法保存",
+      "action": "不要用其他字段代替，截图记录后交给维护者确认。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_ai_output_abnormal",
+      "title": "AI 输出格式异常",
+      "condition": "AI 输出不是后续工具可用的「处理1」",
+      "action": "重新用固定提示词生成；仍异常时回到源文件检查联系人数据。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_split_download_blocked",
+      "title": "拆分工具下载被阻止",
+      "condition": "浏览器提示阻止下载多个文件",
+      "action": "允许下载多个文件后重新运行拆分。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_split_company_mismatch",
+      "title": "拆分文件公司不匹配",
+      "condition": "拆分出的公司-岗位文件与当前公司不对应",
+      "action": "停止上传 SN，回到「处理1」和源文件检查公司主体。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_sn_wrong_list",
+      "title": "SN 列表上传错误",
+      "condition": "公司或岗位文件上传到错误 SN 列表",
+      "action": "停止后续动作，移除或纠正错误列表中的记录，再重新上传。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_sn_validation_missing",
+      "title": "SN 邮箱未验证",
+      "condition": "上传后未验证邮箱地址",
+      "action": "立即执行「验证邮箱地址」，再继续 Gmail 转移。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_gmail_transfer_missing",
+      "title": "Gmail 邮箱未转移",
+      "condition": "Gmail 邮箱未转移到对应列表",
+      "action": "筛出 Gmail 邮箱并转移到对应列表。",
+      "visibleInViewer": true
+    },
+    {
+      "id": "exception_crm_save_failed",
+      "title": "CRM 保存失败",
+      "condition": "CRM 页面保存失败",
+      "action": "不要关闭页面，截图记录失败状态后重试或交给维护者。",
+      "visibleInViewer": true
+    }
+  ],
+  "exceptionModules": [
+    {
+      "id": "exception_common_rules",
+      "title": "异常处理规则",
+      "description": "遇到不确定情况，先确认主体，不要把错误联系人上传进流程。",
+      "exceptionIds": [
+        "exception_website_invalid",
+        "exception_name_abnormal",
+        "exception_rr_sn_no_company",
+        "exception_only_linkedin",
+        "exception_no_contacts",
+        "exception_industry_excluded",
+        "exception_subject_uncertain"
+      ],
+      "status": "active",
+      "devNotes": "旧版第 10 步迁移为异常模块。截图仍挂在 exception_common_rules 下。"
+    }
+  ],
+  "screenshots": [
+    {
+      "id": "shot_node_crm_filter_01",
+      "nodeId": "node_crm_filter",
+      "title": "CRM 高级筛选弹窗",
+      "note": "图 1：CRM 高级筛选弹窗。除「数据来源」外，其余筛选条件固定不动。",
+      "src": "assets/screenshots/01-01-CRM高级筛选弹窗.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_crm_filter_02",
+      "nodeId": "node_crm_filter",
+      "title": "共享文件夹数据来源顺序",
+      "note": "图 2：共享文件夹里的数据来源顺序。旧版记录当前进度做到「中大」。",
+      "src": "assets/screenshots/01-02-共享文件夹数据来源顺序.png",
+      "sortOrder": 2,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_rr_sn_search_01",
+      "nodeId": "node_rr_sn_search",
+      "title": "RR 无搜索记录",
+      "note": "在 RR 上搜索不到官网时，先让 AI 重新查询，或输入公司名字继续查询；仍找不到则按皆无处理。",
+      "src": "assets/screenshots/03-01-RR无搜索记录.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_rr_sn_search_02",
+      "nodeId": "node_rr_sn_search",
+      "title": "多个公司",
+      "note": "RR 出现多个相同公司时，可以点开 view more，看 employees 有多少在 RR 收录。",
+      "src": "assets/screenshots/03-02-多个公司.png",
+      "sortOrder": 2,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_rr_sn_search_03",
+      "nodeId": "node_rr_sn_search",
+      "title": "RR 导出",
+      "note": "RR 导出的文件放至箭头指向处。",
+      "src": "assets/screenshots/03-03-RR导出.png",
+      "sortOrder": 3,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_merge_clean_01",
+      "nodeId": "node_merge_clean",
+      "title": "联系人合并清洗",
+      "note": "RR 导出的是 CSV，SN 导出的是 XLSX。",
+      "src": "assets/screenshots/04-01-联系人合并清洗.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_upload_crm_01",
+      "nodeId": "node_upload_crm",
+      "title": "上传 CRM",
+      "note": "确保上传完成、无异常。",
+      "src": "assets/screenshots/05-01-上传CRM.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_ai_process_01",
+      "nodeId": "node_ai_process",
+      "title": "下载 AI 处理",
+      "note": "",
+      "src": "assets/screenshots/06-01-下载AI处理.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_ai_split_01",
+      "nodeId": "node_ai_split",
+      "title": "拆分工具",
+      "note": "碰到「下载多个文件」时点击允许即可。",
+      "src": "assets/screenshots/07-01-拆分工具.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_sn_upload_verify_01",
+      "nodeId": "node_sn_upload_verify",
+      "title": "上传对应的行业岗位",
+      "note": "每次都要验证邮箱地址。",
+      "src": "assets/screenshots/08-01-上传对应的行业岗位.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_sn_upload_verify_02",
+      "nodeId": "node_sn_upload_verify",
+      "title": "选出 Gmail",
+      "note": "",
+      "src": "assets/screenshots/08-02-选出Gmali.png",
+      "sortOrder": 2,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_node_sn_upload_verify_03",
+      "nodeId": "node_sn_upload_verify",
+      "title": "转移 Gmail 邮箱",
+      "note": "",
+      "src": "assets/screenshots/08-03-转移Gmail邮箱.png",
+      "sortOrder": 3,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_exception_common_rules_01",
+      "nodeId": "exception_common_rules",
+      "title": "Codex 处理筛选",
+      "note": "当前做到 B 级优先处理级，其他不变。",
+      "src": "assets/screenshots/10-01-codex处理筛选.png",
+      "sortOrder": 1,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_exception_common_rules_02",
+      "nodeId": "exception_common_rules",
+      "title": "选中导出",
+      "note": "选中 - 导出 - 勾选导出字段。",
+      "src": "assets/screenshots/10-02-选中导出.png",
+      "sortOrder": 2,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    },
+    {
+      "id": "shot_exception_common_rules_03",
+      "nodeId": "exception_common_rules",
+      "title": "我的导出",
+      "note": "",
+      "src": "assets/screenshots/10-03-我的导出.png",
+      "sortOrder": 3,
+      "visibleInViewer": true,
+      "migratedFromLegacyHtml": true,
+      "displayMode": "full"
+    }
+  ],
+  "versionRecords": [
+    {
+      "id": "version_20260609_stage1",
+      "date": "2026-06-09",
+      "title": "第一阶段重构",
+      "notes": [
+        "从旧 HTML 迁移为 data.json 驱动结构。",
+        "保留 1 条初始主线、9 个业务节点、1 个异常模块和 15 张旧截图。",
+        "默认观看模式，开发模式提供编辑、截图维护、JSON 导入导出和 HTML 导出。"
+      ]
+    },
+    {
+      "version": "0.4.1",
+      "date": "2026-06-09",
+      "changes": [
+        "修复开发模式输入时页面/侧栏被动滚动",
+        "开发模式新增删除当前步骤按钮"
+      ]
+    },
+    {
+      "version": "0.4.2",
+      "date": "2026-06-09",
+      "changes": [
+        "开发模式新增：前面新增一步、后面新增一步、复制当前步骤",
+        "复制步骤时复制截图记录，但仍引用原图片路径",
+        "本次以用户上传的修改版 index.html 内嵌数据为准"
+      ]
+    }
+  ]
+}
+  
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
